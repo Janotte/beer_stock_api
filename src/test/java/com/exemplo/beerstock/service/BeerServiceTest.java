@@ -1,17 +1,23 @@
 package com.exemplo.beerstock.service;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.exemplo.beerstock.builder.BeerDTOBuilder;
@@ -86,7 +92,7 @@ public class BeerServiceTest {
 
 	@Test
 	void whenNotRegisteredBeerNameIsGivenThenThrowAnException() {
-		
+
 		// given
 		BeerDTO expectedFoundBeerDTO = BeerDTOBuilder.builder().build().toBeerDTO();
 
@@ -95,6 +101,33 @@ public class BeerServiceTest {
 
 		// then
 		assertThrows(BeerNotFoundException.class, () -> beerService.findByName(expectedFoundBeerDTO.getName()));
+	}
+
+	@Test
+	void whenListBeerIsCalledThenReturnAListOfBeers() {
+		// given
+		BeerDTO expectedFoundBeerDTO = BeerDTOBuilder.builder().build().toBeerDTO();
+		Beer expectedFoundBeer = beerMapper.toModel(expectedFoundBeerDTO);
+
+		// when
+		when(beerRepository.findAll()).thenReturn(Collections.singletonList(expectedFoundBeer));
+
+		// then
+		List<BeerDTO> foundListBeersDTO = beerService.listAll();
+
+		assertThat(foundListBeersDTO, is(not(empty())));
+		assertThat(foundListBeersDTO.get(0), is(equalTo(expectedFoundBeerDTO)));
+	}
+
+	@Test
+	void whenListBeerIsCalledThenReturnAnEmptyListOfBeers() {
+		// when
+		when(beerRepository.findAll()).thenReturn(Collections.emptyList());
+
+		// then
+		List<BeerDTO> foundListBeersDTO = beerService.listAll();
+
+		assertThat(foundListBeersDTO, is(empty()));
 	}
 
 }
