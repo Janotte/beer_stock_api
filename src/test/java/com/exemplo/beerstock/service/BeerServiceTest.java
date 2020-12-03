@@ -18,6 +18,7 @@ import com.exemplo.beerstock.builder.BeerDTOBuilder;
 import com.exemplo.beerstock.dto.BeerDTO;
 import com.exemplo.beerstock.entity.Beer;
 import com.exemplo.beerstock.exception.BeerAlreadyRegisteredException;
+import com.exemplo.beerstock.exception.BeerNotFoundException;
 import com.exemplo.beerstock.mapper.BeerMapper;
 import com.exemplo.beerstock.repository.BeerRepository;
 
@@ -36,6 +37,7 @@ public class BeerServiceTest {
 
 	@Test
 	void whenBeerInformedThenItShulBeCreated() throws BeerAlreadyRegisteredException {
+
 		// given
 		BeerDTO expectedBeerDTO = BeerDTOBuilder.builder().build().toBeerDTO();
 		Beer expectedSavedBeer = beerMapper.toModel(expectedBeerDTO);
@@ -54,6 +56,7 @@ public class BeerServiceTest {
 
 	@Test
 	void whenAlreadyRegisteredBeerInformedThenAnExceptionShouldBeThrow() {
+
 		// given
 		BeerDTO expectedBeerDTO = BeerDTOBuilder.builder().build().toBeerDTO();
 		Beer duplicatedBeer = beerMapper.toModel(expectedBeerDTO);
@@ -64,7 +67,34 @@ public class BeerServiceTest {
 		// then
 		assertThrows(BeerAlreadyRegisteredException.class, () -> beerService.createBeer(expectedBeerDTO));
 	}
-	
-	
+
+	@Test
+	void whenValidBeerNameIsGivenThenReturnABeer() throws BeerNotFoundException {
+
+		// given
+		BeerDTO expectedFoundBeerDTO = BeerDTOBuilder.builder().build().toBeerDTO();
+		Beer expectedFoundBeer = beerMapper.toModel(expectedFoundBeerDTO);
+
+		// when
+		when(beerRepository.findByName(expectedFoundBeer.getName())).thenReturn(Optional.of(expectedFoundBeer));
+
+		// then
+		BeerDTO foundBeerDTO = beerService.findByName(expectedFoundBeerDTO.getName());
+
+		assertThat(foundBeerDTO, is(equalTo(expectedFoundBeerDTO)));
+	}
+
+	@Test
+	void whenNotRegisteredBeerNameIsGivenThenThrowAnException() {
+		
+		// given
+		BeerDTO expectedFoundBeerDTO = BeerDTOBuilder.builder().build().toBeerDTO();
+
+		// when
+		when(beerRepository.findByName(expectedFoundBeerDTO.getName())).thenReturn(Optional.empty());
+
+		// then
+		assertThrows(BeerNotFoundException.class, () -> beerService.findByName(expectedFoundBeerDTO.getName()));
+	}
 
 }

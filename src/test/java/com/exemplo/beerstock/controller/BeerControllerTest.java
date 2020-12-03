@@ -49,6 +49,7 @@ public class BeerControllerTest {
 
 	@Test
 	void whenPOSTIsCalledThenABeerIsCreated() throws Exception {
+		
 		// given
 		BeerDTO beerDTO = BeerDTOBuilder.builder().build().toBeerDTO();
 
@@ -67,6 +68,7 @@ public class BeerControllerTest {
 
 	@Test
 	void whenPOSTIsCalledWithoutRequiredFieldThenAnErrorIsReturned() throws Exception {
+		
 		// given
 		BeerDTO beerDTO = BeerDTOBuilder.builder().build().toBeerDTO();
 		beerDTO.setBrand(null);
