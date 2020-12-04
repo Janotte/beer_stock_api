@@ -4,6 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.lessThan;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doNothing;
@@ -19,7 +20,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.exemplo.beerstock.builder.BeerDTOBuilder;
@@ -30,8 +30,6 @@ import com.exemplo.beerstock.exception.BeerNotFoundException;
 import com.exemplo.beerstock.exception.BeerStockExceededException;
 import com.exemplo.beerstock.mapper.BeerMapper;
 import com.exemplo.beerstock.repository.BeerRepository;
-
-import static org.hamcrest.Matchers.*;
 
 @ExtendWith(MockitoExtension.class)
 public class BeerServiceTest {
@@ -139,7 +137,7 @@ public class BeerServiceTest {
 
 	@Test
 	void whenExclusionIsCalledWithValidIdThenABeerShouldBeDeleted() throws BeerNotFoundException {
-		
+
 		// given
 		BeerDTO expectedDeletedBeerDTO = BeerDTOBuilder.builder().build().toBeerDTO();
 		Beer expectedDeletedBeer = beerMapper.toModel(expectedDeletedBeerDTO);
@@ -157,7 +155,7 @@ public class BeerServiceTest {
 
 	@Test
 	void whenIncrementIsCalledThenIncrementBeerStock() throws BeerNotFoundException, BeerStockExceededException {
-		
+
 		// given
 		BeerDTO expectedBeerDTO = BeerDTOBuilder.builder().build().toBeerDTO();
 		Beer expectedBeer = beerMapper.toModel(expectedBeerDTO);
@@ -175,5 +173,51 @@ public class BeerServiceTest {
 		assertThat(expectedQuantityAfterIncrement, equalTo(incrementedBeerDTO.getQuantity()));
 		assertThat(expectedQuantityAfterIncrement, lessThan(expectedBeerDTO.getMax()));
 	}
+
+	@Test
+	void whenIncrementIsGreatherThanMaxThenThrowException() {
+
+		// given
+		BeerDTO expectedBeerDTO = BeerDTOBuilder.builder().build().toBeerDTO();
+		Beer expectedBeer = beerMapper.toModel(expectedBeerDTO);
+
+		// when
+		when(beerRepository.findById(expectedBeerDTO.getId())).thenReturn(Optional.of(expectedBeer));
+
+		// then
+		int quantityToIncrement = 80;
+		assertThrows(BeerStockExceededException.class,
+				() -> beerService.increment(expectedBeerDTO.getId(), quantityToIncrement));
+	}
+
+	@Test
+	void whenIncrementAfterSumIsGreatherThanMaxThenThrowException() {
+
+		// given
+		BeerDTO expectedBeerDTO = BeerDTOBuilder.builder().build().toBeerDTO();
+		Beer expectedBeer = beerMapper.toModel(expectedBeerDTO);
+
+		// when
+		when(beerRepository.findById(expectedBeerDTO.getId())).thenReturn(Optional.of(expectedBeer));
+
+		// then
+		int quantityToIncrement = 45;
+		assertThrows(BeerStockExceededException.class,
+				() -> beerService.increment(expectedBeerDTO.getId(), quantityToIncrement));
+	}
+
+	@Test
+	void whenIncrementIsCalledWithInvalidIdThenThrowException() {
+
+		// given
+		int quantityToIncrement = 10;
+
+		// when
+		when(beerRepository.findById(INVALID_BEER_ID)).thenReturn(Optional.empty());
+
+		// then
+		assertThrows(BeerNotFoundException.class, () -> beerService.increment(INVALID_BEER_ID, quantityToIncrement));
+	}
+	
 
 }
